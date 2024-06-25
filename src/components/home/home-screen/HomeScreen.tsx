@@ -1,9 +1,14 @@
-import React from 'react'
+import BaseLayout from "@/components/BaseLayout";
+import UserProfile from "./UserProfile";
+import Posts from "./Posts";
 
-const HomeScreen = () => {
+const HomeScreen = async () => {
+
   return (
-    <div>HomeScreen</div>
-  )
-}
-
-export default HomeScreen
+    <BaseLayout>
+      <UserProfile />
+      <Posts />
+    </BaseLayout>
+  );
+};
+export default HomeScreen;

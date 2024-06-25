@@ -1,9 +1,13 @@
-import React from 'react'
+"use client";
+
+import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs";
+import { DropdownMenuItem } from "./ui/dropdown-menu";
 
 const LogoutButton = () => {
   return (
-    <div>LogoutButton</div>
-  )
-}
-
-export default LogoutButton
+    <LogoutLink>
+      <DropdownMenuItem>Logout</DropdownMenuItem>
+    </LogoutLink>
+  );
+};
+export default LogoutButton;
