@@ -9,6 +9,7 @@ import { CldUploadWidget, CloudinaryUploadWidgetInfo } from "next-cloudinary";
 import Image from "next/image";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast"
+import { addNewProductToStoreAction } from "../actions";
 
 const AddNewProductForm = () => {
   const [name, setName] = useState("");
@@ -17,6 +18,22 @@ const AddNewProductForm = () => {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const { mutate: createProduct, isPending } = useMutation({
+    mutationKey: ["createProduct"],
+    mutationFn: async () => await addNewProductToStoreAction({ name, image: imageUrl, price }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getAllProducts"] });
+      toast({
+        title: "Product Added",
+        description: "The product has been added successfully",
+      });
+
+      setName("");
+      setPrice("");
+      setImageUrl("");
+    },
+  });
 
   return (
     <>
@@ -27,7 +44,7 @@ const AddNewProductForm = () => {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          // createProduct();
+          createProduct();
         }}
       >
         <Card className='w-full max-w-md mx-auto'>
@@ -85,8 +102,8 @@ const AddNewProductForm = () => {
             )}
           </CardContent>
           <CardFooter>
-            <Button className='w-full' type='submit' >
-              Add Product
+            <Button className='w-full' type='submit' disabled={isPending}>
+              {isPending ? "Adding..." : "Add Product"}
             </Button>
           </CardFooter>
         </Card>

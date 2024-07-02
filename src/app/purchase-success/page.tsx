@@ -1,10 +1,10 @@
 import BaseLayout from "@/components/BaseLayout";
-import UpdateProfileForm from "./UpdateProfileForm";
+import PurchaseSummary from "./PurchaseSummary";
 
 const Page = () => {
   return (
     <BaseLayout>
-      <UpdateProfileForm />
+      <PurchaseSummary />
     </BaseLayout>
   );
 };

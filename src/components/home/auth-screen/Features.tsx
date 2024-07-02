@@ -1,6 +1,7 @@
 import UnderlinedText from "@/components/decorators/UnderlinedText";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
 
 interface FeatureProps {
   title: string;
@@ -63,7 +64,7 @@ const Features = () => {
             <CardContent>{description}</CardContent>
 
             <CardFooter className='mt-auto'>
-              <img
+              <Image
                 src={image}
                 alt='Feature Item'
                 className='rounded w-[250px] h-32 lg:w-[300px]  mx-auto z-0 select-none pointer-events-none'

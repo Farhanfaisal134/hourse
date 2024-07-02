@@ -1,5 +1,6 @@
 import RotatedText from "@/components/decorators/RotatedText";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
 
 interface TeamProps {
   imageUrl: string;
@@ -50,7 +51,7 @@ const Team = () => {
         {teamList.map(({ description, imageUrl, name, position }) => (
           <Card key={name} className='bg-muted/50 relative mt-7 flex flex-col justify-center items-center'>
             <CardHeader className='my-8 flex justify-center items-center pb-2'>
-              <img
+              <Image
                 src={imageUrl}
                 alt='Team member'
                 className='absolute -top-12 rounded-full w-24 h-24 aspect-square object-cover'

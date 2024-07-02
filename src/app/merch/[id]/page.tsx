@@ -4,12 +4,28 @@ import UnderlinedText from "@/components/decorators/UnderlinedText";
 import ProductCheckout from "./ProductCheckout";
 import { notFound } from "next/navigation";
 import { products } from "@/dummy_data";
+import prisma from "@/db/prisma";
 
 const Page = async ({ params }: { params: { id: string } }) => {
+  const currentProduct = await prisma.product.findUnique({
+    where: {
+      id: params.id,
+    },
+  });
+
+  const products = await prisma.product.findMany({
+    where: {
+      isArchived: false,
+      id: { not: params.id },
+    },
+  });
+
+  if (!currentProduct || currentProduct.isArchived) return
+
   return (
     <BaseLayout renderRightPanel={false}>
       <div className='px-3 md:px-7 my-20'>
-        <ProductCheckout product={products[0]} />
+        <ProductCheckout product={currentProduct} />
 
         <h1 className='text-3xl text-center mt-20 mb-10 font-bold tracking-tight'>
           More product from{" "}

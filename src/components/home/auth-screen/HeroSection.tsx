@@ -5,7 +5,7 @@ const HeroSection = () => {
   return (
     <div className='flex h-screen w-full'>
       <div className='flex-1 flex overflow-hidden bg-[#00b0f0a6] relative justify-center items-center z-10 bg-noise'>
-        <img
+        <Image
           src='/of-logo.svg'
           alt='OnlyHorse Logo'
           className='absolute -left-1/4 opacity-15 -bottom-52 lg:scale-150 xl:scale-105 scale-[2]
@@ -21,7 +21,7 @@ const HeroSection = () => {
           />
 
           <p className='text-2xl md:text-3xl text-balance'>
-            Hey! It's <span className='bg-stone-800 px-2 font-bold text-white'>NOT</span> what it looks
+            Hey Its <span className='bg-stone-800 px-2 font-bold text-white'>NOT</span> what it looks
             like.
           </p>
           <p className='text-2xl md:text-3xl mb-32 leading-snug text-balance'>

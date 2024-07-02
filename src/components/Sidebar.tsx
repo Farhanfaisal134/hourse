@@ -12,7 +12,7 @@ import {
 import { ModeToggle } from "./ModeToggle";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import LogoutButton from "./LogoutButton";
-import { user1 } from "@/dummy_data";
+import { getUserProfileAction } from "@/app/update-profile/actions";
 
 const SIDEBAR_LINKS = [
   {
@@ -31,19 +31,21 @@ const Sidebar = async () => {
   const { getUser } = getKindeServerSession();
   const user = await getUser();
 
-  const isAdmin = true
+  const userProfile = await getUserProfileAction();
+
+  const isAdmin = process.env.ADMIN_EMAIL === user?.email;
+
   return (
     <div
       className='flex lg:w-1/5 flex-col gap-3 px-2 border-r sticky
-  left-0 top-0 h-screen'
+    left-0 top-0 h-screen'
     >
       <Link href='/update-profile' className='max-w-fit'>
         <Avatar className='mt-4 cursor-pointer'>
-          <AvatarImage src={user1?.image || "/user-placeholder.png"} className='object-cover' />
+          <AvatarImage src={userProfile?.image || "/user-placeholder.png"} className='object-cover' />
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>
       </Link>
-
 
       <nav className='flex flex-col gap-3'>
         {SIDEBAR_LINKS.map((link) => (
@@ -88,7 +90,6 @@ const Sidebar = async () => {
         <ModeToggle />
       </nav>
     </div>
-  )
-}
-
-export default Sidebar
+  );
+};
+export default Sidebar;

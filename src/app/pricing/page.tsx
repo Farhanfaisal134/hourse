@@ -1,9 +1,11 @@
-import React from 'react'
+import BaseLayout from "@/components/BaseLayout";
+import Pricing from "@/components/Pricing";
 
-const page = () => {
+const Page = () => {
   return (
-    <div>page</div>
-  )
-}
-
-export default page
+    <BaseLayout renderRightPanel={false}>
+      <Pricing />
+    </BaseLayout>
+  );
+};
+export default Page;

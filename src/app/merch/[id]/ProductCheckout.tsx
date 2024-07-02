@@ -10,13 +10,41 @@ import { Product } from "@prisma/client";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createCheckoutSessionAction } from "./actions";
 
 const ProductCheckout = ({ product }: { product: any }) => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleBuyProduct = async () => { }
+  const { mutate: createCheckoutSession, isPending } = useMutation({
+    mutationKey: ["createCheckoutSession"],
+    mutationFn: createCheckoutSessionAction,
+    onSuccess: ({ url }) => {
+      if (url) router.push(url);
+      else throw new Error("Error creating checkout session.Please try again later");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Something went wrong. Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleBuyProduct = async () => {
+    if (!selectedSize) {
+      toast({
+        title: "Error",
+        description: "Please select a size",
+        variant: "destructive",
+      });
+      return;
+    }
+    // call our mutation
+    createCheckoutSession({ productId: product.id, size: selectedSize });
+  };
 
   return (
     <div className='flex flex-col md:flex-row gap-5'>

@@ -10,44 +10,123 @@ import { CldVideoPlayer } from "next-cloudinary";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { commentOnPostAction, deletePostAction, likePostAction } from "./actions";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import Comment from "./Comment";
+import Comment from "./Comment"
 
-const Post = ({ post }: { post: any }) => {
+type PostWithComments = Prisma.PostGetPayload<{
+  include: {
+    comments: {
+      include: {
+        user: true;
+      };
+    };
+    likesList: true;
+  };
+}>;
+
+const Post = ({ post, isSubscribed, admin }: { post: PostWithComments; isSubscribed: boolean; admin: User }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [comment, setComment] = useState("");
+  const { user } = useKindeBrowserClient();
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const isSubscribed = false
+  const { mutate: deletePost } = useMutation({
+    mutationKey: ["deletePost"],
+    mutationFn: async () => await deletePostAction(post.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast({
+        title: "Success",
+        description: "Post deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
+  const { mutate: likePost } = useMutation({
+    mutationKey: ["likePost"],
+    mutationFn: async () => {
+      post.likes += isLiked ? -1 : 1;
+      setIsLiked(!isLiked);
+      await likePostAction(post.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const { mutate: commentPost, isPending: isCommenting } = useMutation({
+    mutationKey: ["commentPost"],
+    mutationFn: async () => await commentOnPostAction(post.id, comment),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      setComment("");
+      toast({
+        title: "Success",
+        description: "Comment added successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleCommentSubmission = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+    e.preventDefault();
+    if (!comment) return;
+    commentPost();
   }
+
+  useEffect(() => {
+    if (post.likesList && user?.id) setIsLiked(post.likesList.length > 0);
+  }, [post.likesList, user?.id]);
 
   return (
     <div className='flex flex-col gap-3 p-3 border-t'>
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-2'>
           <Avatar>
-            <AvatarImage src={"/user-placeholder.png"} className='object-cover' />
+            <AvatarImage src={admin.image || "/user-placeholder.png"} className='object-cover' />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
-          <span className='font-semibold text-sm md:text-md'>John Doe</span>
+          <span className='font-semibold text-sm md:text-md'>{admin.name}</span>
         </div>
-
         <div className='flex gap-2 items-center'>
           <p className='text-zinc-400 text-xs md:text-sm tracking-tighter'>17.06.2024</p>
-          <Trash
-            className='w-5 h-5 text-muted-foreground hover:text-red-500 cursor-pointer' />
+
+          {admin.id === user?.id && (
+            <Trash
+              className='w-5 h-5 text-muted-foreground hover:text-red-500 cursor-pointer'
+              onClick={() => deletePost()}
+            />
+          )}
         </div>
       </div>
-      <p className='text-sm md:text-md'>Caption</p>
+
+      <p className='text-sm md:text-md'>{post.text}</p>
 
       {(post.isPublic || isSubscribed) && post.mediaUrl && post.mediaType === "image" && (
         <div className='relative w-full pb-[56.25%] rounded-lg overflow-hidden'>
@@ -93,6 +172,10 @@ const Post = ({ post }: { post: any }) => {
         <div className='flex gap-1 items-center'>
           <Heart
             className={cn("w-5 h-5 cursor-pointer", { "text-red-500": isLiked, "fill-red-500": isLiked })}
+            onClick={() => {
+              if (!isSubscribed) return;
+              likePost();
+            }}
           />
           <span className='text-xs text-zinc-400 tracking-tighter'>{post.likes}</span>
         </div>
@@ -108,9 +191,10 @@ const Post = ({ post }: { post: any }) => {
                   <DialogTitle>Comments</DialogTitle>
                 </DialogHeader>
                 <ScrollArea className='h-[400px] w-[350px] rounded-md p-4'>
-                  {/* {post.comments.map((comment) => (
+                  {post.comments.map((comment) => (
                     <Comment key={comment.id} comment={comment} />
-                  ))} */}
+                  ))}
+
                   {post.comments.length === 0 && (
                     <div className='flex flex-col items-center justify-center h-full'>
                       <p className='text-zinc-400'>No comments yet</p>
@@ -126,15 +210,14 @@ const Post = ({ post }: { post: any }) => {
                   />
 
                   <DialogFooter>
-                    <Button type='submit' className='mt-4'>
-                      Comment
+                    <Button type='submit' className='mt-4' disabled={isCommenting}>
+                      {isCommenting ? "Commenting..." : "Comment"}
                     </Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
             )}
           </Dialog>
-          
           <div className='flex gap-1 items-center'>
             <span className='text-xs text-zinc-400 tracking-tighter'>
               {post.comments.length > 0 ? post.comments.length : 0}
@@ -142,7 +225,6 @@ const Post = ({ post }: { post: any }) => {
           </div>
         </div>
       </div>
-
     </div>
   )
 }

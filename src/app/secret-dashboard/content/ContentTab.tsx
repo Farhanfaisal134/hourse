@@ -13,6 +13,7 @@ import { CldUploadWidget, CldVideoPlayer, CloudinaryUploadWidgetInfo } from "nex
 import Image from "next/image";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { createPostAction } from "../actions";
 
 const ContentTab = () => {
   const [text, setText] = useState("");
@@ -22,6 +23,28 @@ const ContentTab = () => {
 
   const { toast } = useToast();
 
+  const { mutate: createPost, isPending } = useMutation({
+    mutationKey: ["createPost"],
+    mutationFn: async () => createPostAction({ text, isPublic, mediaUrl, mediaType }),
+    onSuccess: () => {
+      toast({
+        title: "Post Created",
+        description: "Your post has been successfully created",
+      });
+      setText("");
+      setMediaType("video");
+      setIsPublic(false);
+      setMediaUrl("");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return (
     <>
       <p className='text-3xl my-5 font-bold text-center uppercase'>
@@ -30,6 +53,7 @@ const ContentTab = () => {
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          createPost();
         }}
       >
         <Card className='w-full max-w-md mx-auto'>
@@ -119,13 +143,13 @@ const ContentTab = () => {
           </CardContent>
 
           <CardFooter>
-            <Button className='w-full' type='submit'>
-              Create Post
+            <Button className='w-full' type='submit' disabled={isPending}>
+              {isPending ? "Creating Post..." : "Create Post"}
             </Button>
           </CardFooter>
         </Card>
 
-      </form>
+      </form >
     </>
   )
 }
